@@ -120,6 +120,7 @@ langchain-community==0.3.31
 langchain-core==0.3.86
 langchain-groq==0.3.8
 langchain-huggingface==0.3.1
+langchain-ollama==0.3.10
 langchain-qdrant==0.2.1
 langchain-text-splitters==0.3.11
 langsmith==0.14.12

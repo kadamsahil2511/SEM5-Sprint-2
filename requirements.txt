@@ -10,6 +10,7 @@ groq
 jupyterlab
 langchain<1
 langchain-community<1
+langchain-ollama>=0.3,<0.4
 langchain-groq
 langchain-huggingface
 langchain-qdrant
