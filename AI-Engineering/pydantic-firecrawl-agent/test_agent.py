@@ -3,6 +3,8 @@
 import os
 import sys
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from unittest.mock import patch
 
 import requests
@@ -57,6 +59,40 @@ class FirecrawlAgentTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "FIRECRAWL_API_KEY"):
                 main()
         build.assert_not_called()
+
+    def test_chat_reuses_history_and_exits(self):
+        from agent import main
+
+        class Result:
+            def __init__(self, output, messages):
+                self.output = output
+                self.messages = messages
+
+            def all_messages(self):
+                return self.messages
+
+        first_messages = ["first user", "first answer"]
+        second_messages = first_messages + ["second user", "second answer"]
+        output = StringIO()
+        with (
+            patch.dict(os.environ, {"FIRECRAWL_API_KEY": "test-key"}),
+            patch.object(sys, "argv", ["agent.py"]),
+            patch("agent.load_dotenv"),
+            patch("agent.build_agent") as build,
+            patch("builtins.input", side_effect=["First question", "Follow-up", "quit"]),
+            redirect_stdout(output),
+        ):
+            build.return_value.run_sync.side_effect = [
+                Result("First answer", first_messages),
+                Result("Second answer", second_messages),
+            ]
+            main()
+
+        self.assertEqual(build.call_count, 1)
+        self.assertEqual(build.return_value.run_sync.call_args_list[0].args, ("First question",))
+        self.assertEqual(build.return_value.run_sync.call_args_list[1].args, ("Follow-up",))
+        self.assertEqual(build.return_value.run_sync.call_args_list[1].kwargs["message_history"], first_messages)
+        self.assertIn("Chatbot: Second answer", output.getvalue())
 
     def test_search_calls_firecrawl_with_key_and_returns_sources(self):
         from agent import search_web

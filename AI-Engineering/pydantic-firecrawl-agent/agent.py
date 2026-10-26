@@ -70,12 +70,30 @@ def build_agent() -> Agent:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        raise SystemExit('Usage: python agent.py "Find the Pydantic AI documentation"')
     load_dotenv(Path(__file__).with_name(".env"))
     if not os.getenv("FIRECRAWL_API_KEY", "").strip():
         raise SystemExit("Set FIRECRAWL_API_KEY in .env before running the agent.")
-    print(build_agent().run_sync(" ".join(sys.argv[1:])).output)
+    agent = build_agent()
+    if len(sys.argv) > 1:
+        print(agent.run_sync(" ".join(sys.argv[1:])).output)
+        return
+
+    print("Firecrawl chatbot ready. Type 'quit' to exit.\n")
+    history = []
+    while True:
+        try:
+            question = input("You: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if question.lower() in ("quit", "exit"):
+            break
+        if not question:
+            continue
+
+        result = agent.run_sync(question, message_history=history)
+        history = result.all_messages()
+        print(f"Chatbot: {result.output}\n")
 
 
 if __name__ == "__main__":

@@ -4,12 +4,16 @@ A small CLI agent built with [PydanticAI](https://pydantic.dev/docs/ai/) and one
 `search_web` tool. It calls [Firecrawl Search](https://docs.firecrawl.dev/features/search)
 for three web results, then uses a local Ollama model to answer with source URLs.
 
-From this directory:
+From this directory, start the chat:
 
 ```sh
 source ../../.venv/bin/activate
-python agent.py "Find the official Pydantic AI documentation"
+python agent.py
 ```
+
+Ask questions at the `You:` prompt. The agent remembers earlier messages until
+you leave with `quit`, `exit`, Ctrl-C, or Ctrl-D. You can still ask a single
+question with `python agent.py "Find the official Pydantic AI documentation"`.
 
 Put `FIRECRAWL_API_KEY=...` in `.env`; `.env.example` shows the format. Do not
 overwrite an existing `.env` when copying the example.
