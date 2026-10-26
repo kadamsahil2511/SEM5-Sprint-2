@@ -1,0 +1,31 @@
+# Slides
+*.excalidraw
+
+# Secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python
+prompt-tools/.venv/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Generated indexes and eval output
+chroma_db/
+qdrant_storage/
+*.faiss
+*.pkl
+project-reranking/eval/results.md
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

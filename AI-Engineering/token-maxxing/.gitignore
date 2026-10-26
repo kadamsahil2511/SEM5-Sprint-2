@@ -1,0 +1,28 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.venv
+__pycache__/
+*.py[cod]
+
+# testing
+/coverage
+
+# production
+/build
+/package
+
+# misc
+.DS_Store
+.env.local
+.env
+.env.*
+.env.development.local
+.env.test.local
+.env.production.local
+.history
+*.log
+
+# secrets
+secrets.*.js

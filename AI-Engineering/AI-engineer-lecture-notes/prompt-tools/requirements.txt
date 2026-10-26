@@ -1,0 +1,2 @@
+# Image Studio is a sibling project; the sprint-level requirements include both.
+-r compressor/requirements.txt

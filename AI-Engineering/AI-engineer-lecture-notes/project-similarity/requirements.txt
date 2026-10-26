@@ -1,0 +1,6 @@
+numpy
+sentence-transformers
+streamlit
+matplotlib
+pandas
+scikit-learn           # only for TSNE/PCA to drop 384D -> 2D for the visualizer

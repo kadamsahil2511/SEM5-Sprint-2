@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API docs · Sentiment Studio</title>
+  <style>
+    :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 36px 20px; background: #212121; color: #ececec; line-height: 1.6; }
+    main { max-width: 760px; margin: auto; }
+    a { color: #65d6b9; }
+    h1 { margin: 10px 0; font-size: 32px; }
+    h2 { margin: 32px 0 8px; font-size: 20px; }
+    p { color: #bbb; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    code { color: #a4e8d6; }
+    pre { overflow-x: auto; padding: 17px; border: 1px solid #424242; border-radius: 10px; background: #171717; color: #ececec; }
+    .method { display: inline-block; min-width: 48px; margin-right: 9px; color: #65d6b9; font-size: 13px; }
+    .error { color: #ff9999; }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="/">← Back to analyzer</a>
+    <h1>Sentiment Studio API</h1>
+    <p>Local Flask endpoints. Run <code>.venv/bin/python app.py</code> and use <code>http://127.0.0.1:5050</code>.</p>
+
+    <h2><span class="method">GET</span><code>/</code></h2>
+    <p>Open the sentiment analysis page.</p>
+
+    <h2><span class="method">GET</span><code>/health</code></h2>
+    <p>Check that the Flask server is running. Returns <code>{"status":"ok"}</code>.</p>
+
+    <h2><span class="method">POST</span><code>/analyze</code></h2>
+    <p>Send JSON with a non-empty <code>text</code> string:</p>
+    <pre>{"text":"I loved this movie."}</pre>
+    <p>Example response:</p>
+    <pre>{"choice":"positive","score":1.9,"noul":0.95}</pre>
+    <p><code>choice</code> is positive, negative, or neutral. <code>score</code> runs from 0 (negative) through 1 (neutral) to 2 (positive). <code>noul</code> runs from 0 to 1 and estimates whether the text expresses positive sentiment. Values are local model estimates.</p>
+    <p>Try it from a terminal:</p>
+    <pre>curl -X POST http://127.0.0.1:5050/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"I loved this movie."}'</pre>
+    <p class="error">Errors: 400 for missing or invalid text; 502 when Ollama is unavailable or returns an invalid answer.</p>
+    <p>Looking for the framework reference? Read the <a href="https://flask.palletsprojects.com/en/stable/">official Flask documentation</a>.</p>
+  </main>
+</body>
+</html>

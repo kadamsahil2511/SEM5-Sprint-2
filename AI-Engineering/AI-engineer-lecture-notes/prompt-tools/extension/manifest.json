@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Prompt Token Reducer",
+  "version": "0.1.0",
+  "description": "Shrink long LLM prompts to fewer tokens — fast local rules or LLMLingua-2 via local Python service.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Prompt Token Reducer",
+    "default_icon": {
+      "16": "icons/icon16.svg",
+      "48": "icons/icon48.svg",
+      "128": "icons/icon128.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  },
+  "permissions": ["storage", "clipboardRead", "clipboardWrite", "activeTab"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+      ],
+      "js": ["vendor/compromise.min.js", "reducer.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["reducer.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

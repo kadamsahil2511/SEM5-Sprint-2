@@ -1,0 +1,9 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #202234;
+}
+
+body {
+  width: 360px;
+  margin: 0;
+}

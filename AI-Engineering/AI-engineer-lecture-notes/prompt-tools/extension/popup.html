@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Prompt Token Reducer</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Prompt Token Reducer</h1>
+      <span class="offline" title="100% offline, no network calls">offline</span>
+    </header>
+
+    <section>
+      <label for="original">
+        Original prompt <span class="count">[<span id="count-original">0</span> tokens]</span>
+      </label>
+      <textarea id="original" placeholder="Paste your long prompt here..."></textarea>
+    </section>
+
+    <section>
+      <label for="reduced">
+        Reduced prompt <span class="count">[<span id="count-reduced">0</span> tokens]</span>
+      </label>
+      <textarea id="reduced" readonly placeholder="Click Reduce to compress."></textarea>
+    </section>
+
+    <div class="controls">
+      <label class="toggle">
+        <input type="checkbox" id="aggressive" />
+        <span id="toggleLabel">Light mode (rules only)</span>
+      </label>
+      <div class="spacer"></div>
+      <button id="reduce" class="primary">Reduce</button>
+      <button id="copy">Copy reduced</button>
+    </div>
+
+    <details id="breakdownWrap">
+      <summary>Breakdown</summary>
+      <pre id="breakdown" class="breakdown"></pre>
+    </details>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <script src="vendor/compromise.min.js"></script>
+  <script src="reducer.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

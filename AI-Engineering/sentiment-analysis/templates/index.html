@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentiment Studio</title>
+  <style>
+    :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #ececec; background: #212121; }
+    .layout { display: flex; min-height: 100vh; }
+    aside { width: 248px; flex: none; padding: 24px 16px; background: #171717; display: flex; flex-direction: column; gap: 28px; }
+    .brand { font-size: 18px; font-weight: 700; letter-spacing: -.02em; padding: 8px; }
+    .brand span { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: 8px; border-radius: 9px; background: #10a37f; color: white; }
+    .new { width: 100%; padding: 11px 13px; text-align: left; border: 1px solid #454545; border-radius: 10px; background: transparent; color: inherit; cursor: pointer; font: inherit; }
+    .new:hover { background: #292929; }
+    .aside-note { margin-top: auto; padding: 8px; color: #aaa; font-size: 13px; line-height: 1.5; }
+    main { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+    header { height: 68px; padding: 0 28px; display: flex; align-items: center; border-bottom: 1px solid #333; font-weight: 600; }
+    header a { margin-left: auto; color: #aaa; font-size: 14px; font-weight: 400; text-decoration: none; }
+    header a:hover { color: #ececec; }
+    .conversation { width: min(100%, 760px); margin: 0 auto; padding: 36px 24px 24px; flex: 1; }
+    .welcome { margin: 15vh auto 0; max-width: 520px; text-align: center; }
+    .welcome h1 { margin: 0 0 12px; font-size: clamp(28px, 4vw, 38px); font-weight: 600; letter-spacing: -.03em; }
+    .welcome p { margin: 0; color: #aaa; line-height: 1.6; }
+    .message { margin: 0 0 24px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .message.user { max-width: 80%; width: fit-content; margin-left: auto; padding: 11px 16px; border-radius: 18px; background: #303030; }
+    .result { margin-bottom: 30px; padding: 20px; border: 1px solid #424242; border-radius: 16px; background: #282828; }
+    .result h2 { margin: 0 0 17px; font-size: 18px; font-weight: 600; text-transform: capitalize; }
+    .result h2::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 10px; border-radius: 50%; background: #a0a0a0; }
+    .result.positive h2::before { background: #10a37f; }
+    .result.negative h2::before { background: #ef7777; }
+    .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+    .stat { min-width: 150px; flex: 1; padding: 14px; border-radius: 11px; background: #333; }
+    .stat small { display: block; margin-bottom: 7px; color: #aaa; font-size: 12px; }
+    .stat strong { font-size: 20px; font-weight: 600; }
+    .stat em { color: #aaa; font-size: 12px; font-style: normal; }
+    .error { color: #ff9999; }
+    .composer-wrap { position: sticky; bottom: 0; padding: 16px 24px 22px; background: linear-gradient(transparent, #212121 18%); }
+    form { width: min(100%, 760px); margin: auto; display: flex; align-items: end; gap: 12px; padding: 12px; border: 1px solid #4a4a4a; border-radius: 18px; background: #303030; }
+    textarea { width: 100%; min-height: 32px; max-height: 160px; resize: vertical; padding: 6px; border: 0; outline: 0; background: transparent; color: #ececec; font: 15px/1.5 Arial, Helvetica, sans-serif; }
+    textarea::placeholder { color: #aaa; }
+    form button { width: 36px; height: 36px; flex: none; border: 0; border-radius: 10px; background: #ececec; color: #212121; font-size: 21px; cursor: pointer; }
+    form button:disabled { opacity: .45; cursor: wait; }
+    .hint { width: min(100%, 760px); margin: 9px auto 0; text-align: center; color: #888; font-size: 12px; }
+    @media (max-width: 700px) { aside { display: none; } header { height: 56px; padding: 0 18px; } .conversation { padding: 24px 16px; } .composer-wrap { padding: 14px 12px; } .welcome { margin-top: 12vh; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand"><span aria-hidden="true">S</span>Sentiment Studio</div>
+      <button class="new" id="new-chat" type="button">＋ New analysis</button>
+      <div class="aside-note">Choice picks a sentiment. Score places it from negative (0) to positive (2). Noul estimates whether it is positive (0–1).</div>
+    </aside>
+    <main>
+      <header>Sentiment analysis <a href="/docs">API docs</a></header>
+      <section class="conversation" id="conversation" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <h1>How does this text feel?</h1>
+          <p>Paste a sentence, review, or message. Get a sentiment choice, a score, and a Noul value.</p>
+        </div>
+      </section>
+      <div class="composer-wrap">
+        <form id="analyze-form">
+          <label for="text" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Text to analyze</label>
+          <textarea id="text" name="text" rows="1" placeholder="Message to analyze..." required></textarea>
+          <button id="send" type="submit" aria-label="Analyze text">↑</button>
+        </form>
+        <p class="hint">Enter to analyze · Shift + Enter for a new line</p>
+      </div>
+    </main>
+  </div>
+  <script>
+    const form = document.getElementById('analyze-form');
+    const input = document.getElementById('text');
+    const send = document.getElementById('send');
+    const conversation = document.getElementById('conversation');
+
+    document.getElementById('new-chat').addEventListener('click', () => {
+      conversation.replaceChildren();
+      input.value = '';
+      input.focus();
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text || send.disabled) return;
+      document.getElementById('welcome')?.remove();
+      const message = document.createElement('div');
+      message.className = 'message user';
+      message.textContent = text;
+      conversation.append(message);
+      input.value = '';
+      send.disabled = true;
+
+      const result = document.createElement('article');
+      result.className = 'result';
+      result.textContent = 'Analyzing…';
+      conversation.append(result);
+      result.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+      try {
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Analysis failed.');
+        result.classList.add(data.choice);
+        result.textContent = '';
+        const title = document.createElement('h2');
+        title.textContent = data.choice;
+        const stats = document.createElement('div');
+        stats.className = 'stats';
+        for (const [label, value, detail] of [
+          ['Score', Number(data.score).toFixed(2), 'out of 2'],
+          ['Noul · positive?', Number(data.noul).toFixed(2), '0 to 1']
+        ]) {
+          const stat = document.createElement('div');
+          stat.className = 'stat';
+          const name = document.createElement('small');
+          name.textContent = label;
+          const number = document.createElement('strong');
+          number.textContent = value;
+          const note = document.createElement('em');
+          note.textContent = ` ${detail}`;
+          stat.append(name, number, note);
+          stats.append(stat);
+        }
+        result.append(title, stats);
+      } catch (error) {
+        result.classList.add('error');
+        result.textContent = error.message;
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

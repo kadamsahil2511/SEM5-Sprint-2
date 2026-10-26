@@ -1,0 +1,12 @@
+jupyterlab
+streamlit
+spacy
+langchain<1
+langchain-community<1
+ollama
+nltk
+requests
+chromadb
+sentence-transformers
+langchain-text-splitters
+pypdf
