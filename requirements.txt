@@ -1,6 +1,7 @@
 # Shared Python environment for the AI Engineering projects.
 accelerate>=0.34.0
 chromadb==1.5.9
+ddgs>=9,<10
 diffusers>=0.31.0
 einops
 faiss-cpu

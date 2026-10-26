@@ -10,7 +10,7 @@
 | [PDF RAG](AI-Engineering/pdf-rag/) | PDF retrieval and chat with FAISS or Chroma |
 | [Sentiment Analysis](AI-Engineering/sentiment-analysis/) | Sentiment analysis web app |
 | [Token Maxxing](AI-Engineering/token-maxxing/) | Browser extension and prompt compressor |
-| [Weather Agent](AI-Engineering/weather-agent/) | Current weather questions through LangChain and Open-Meteo (no API key) |
+| [Multi-Tool Agent](AI-Engineering/multi-tool-agent/) | LangChain agent with keyless web search and current weather tools |
 
 All Python projects use the single `.venv` in this sprint folder:
 

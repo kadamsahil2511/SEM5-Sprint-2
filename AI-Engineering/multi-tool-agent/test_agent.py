@@ -32,7 +32,57 @@ def weather_responses():
     ]
 
 
-class WeatherToolTests(unittest.TestCase):
+class MultiToolAgentTests(unittest.TestCase):
+    def test_agent_registers_weather_and_web_search_tools(self):
+        from agent import main
+
+        model = MagicMock()
+        model.bind_tools.return_value = RunnableLambda(lambda _: AIMessage(content="Here is the answer."))
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(sys, "argv", ["agent.py", "Find the LangChain documentation"]),
+            patch("agent.ChatOllama", return_value=model),
+            redirect_stdout(io.StringIO()),
+        ):
+            main()
+        bound_tools = model.bind_tools.call_args.args[0]
+        self.assertEqual({tool.name for tool in bound_tools}, {"get_current_weather", "web_search"})
+
+    def test_web_search_returns_linked_results(self):
+        from agent import web_search
+
+        with patch("agent.DDGS") as client:
+            client.return_value.text.return_value = [
+                {"title": "LangChain docs", "href": "https://docs.langchain.com/", "body": "Agent documentation"}
+            ]
+            result = web_search.invoke({"query": "LangChain docs"})
+
+        self.assertIn("LangChain docs", result)
+        self.assertIn("https://docs.langchain.com/", result)
+        self.assertIn("Agent documentation", result)
+        client.return_value.text.assert_called_once_with("LangChain docs", max_results=3, backend="duckduckgo")
+
+    def test_search_answer_does_not_get_weather_credit(self):
+        from agent import main
+
+        replies = iter([
+            AIMessage(content="", tool_calls=[{"name": "web_search", "args": {"query": "LangChain docs"}, "id": "call_1"}]),
+            AIMessage(content="See the [LangChain docs](https://docs.langchain.com/)."),
+        ])
+        model = MagicMock()
+        model.bind_tools.return_value = RunnableLambda(lambda _: next(replies))
+        output = io.StringIO()
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(sys, "argv", ["agent.py", "Find the LangChain docs"]),
+            patch("agent.ChatOllama", return_value=model),
+            patch("agent.DDGS", create=True) as client,
+            redirect_stdout(output),
+        ):
+            client.return_value.text.return_value = [{"title": "LangChain docs", "href": "https://docs.langchain.com/", "body": "Documentation"}]
+            main()
+        self.assertEqual(output.getvalue().strip(), "See the [LangChain docs](https://docs.langchain.com/).")
+
     def test_weather_lookup_needs_no_api_key(self):
         from agent import get_current_weather
 
