@@ -29,6 +29,7 @@ pypdf
 python-dotenv>=1.0.1
 qdrant-client
 requests
+rich>=15,<16
 scikit-learn
 sentence-transformers==3.3.0
 sentencepiece
