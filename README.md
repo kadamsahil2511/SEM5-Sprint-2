@@ -8,6 +8,7 @@
 | [LLMs and RAG](AI-Engineering/LLMs-Rag-DG/) | Gemini chat and NLP chatbot experiments |
 | [Image Studio](AI-Engineering/image-studio/) | Local image generation API |
 | [PDF RAG](AI-Engineering/pdf-rag/) | PDF retrieval and chat with FAISS or Chroma |
+| [PydanticAI Firecrawl Agent](AI-Engineering/pydantic-firecrawl-agent/) | PydanticAI agent with Firecrawl web search and source links |
 | [Sentiment Analysis](AI-Engineering/sentiment-analysis/) | Sentiment analysis web app |
 | [Token Maxxing](AI-Engineering/token-maxxing/) | Browser extension and prompt compressor |
 | [Multi-Tool Agent](AI-Engineering/multi-tool-agent/) | LangChain agent with keyless web search and current weather tools |
