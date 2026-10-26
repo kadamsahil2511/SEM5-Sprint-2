@@ -2,7 +2,8 @@
 
 A small LangChain agent with one tool for current weather by city. The tool
 resolves the city and retrieves current conditions from [Open-Meteo](https://open-meteo.com/).
-No weather API key, account, or subscription is needed for non-commercial use.
+The local Ollama model turns those conditions into a short answer. No weather
+API key, account, or subscription is needed for non-commercial use.
 
 From this directory:
 

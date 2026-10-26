@@ -12,7 +12,7 @@ from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 
 
-@tool(return_direct=True)
+@tool
 def get_current_weather(city: str) -> str:
     """Get the current weather for a city; include a country code for ambiguous names."""
     if not city.strip():
@@ -27,6 +27,15 @@ def get_current_weather(city: str) -> str:
         )
         response.raise_for_status()
         locations = response.json().get("results", [])
+        name, separator, suffix = city.rpartition(",")
+        if not locations and separator and len(suffix.strip()) == 2 and suffix.strip().isalpha():
+            response = requests.get(
+                "https://geocoding-api.open-meteo.com/v1/search",
+                params={"name": name.strip(), "count": 1, "countryCode": suffix.strip().upper()},
+                timeout=10,
+            )
+            response.raise_for_status()
+            locations = response.json().get("results", [])
         if not locations:
             return f"No location found for {city}. Try adding a country code."
         location = locations[0]
@@ -66,7 +75,15 @@ def main():
     llm = ChatOllama(model=os.getenv("OLLAMA_MODEL", "gemma4:e2b-mlx"), temperature=0)
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "Answer current weather questions using the weather tool. Never invent weather data."),
+            (
+                "system",
+                "Use the weather tool to answer current weather questions. After the tool responds, "
+                "make the first sentence a qualitative summary naming the city, with no numbers. "
+                "When the feels-like temperature is 35°C or more, say 'very hot'. Then give one short "
+                "sentence with the useful numbers. Use only the tool's facts; do not "
+                "claim it is sunny or rainy unless the tool says so. Credit Open-Meteo. "
+                "If the tool reports an error, explain that instead of inventing weather data.",
+            ),
             ("human", "{input}"),
             MessagesPlaceholder("agent_scratchpad"),
         ]
@@ -76,7 +93,10 @@ def main():
         tools=[get_current_weather],
         max_iterations=3,
     )
-    print(agent.invoke({"input": " ".join(sys.argv[1:])})["output"])
+    answer = agent.invoke({"input": " ".join(sys.argv[1:])})["output"].strip()
+    if "Open-Meteo" not in answer:
+        answer += " Source: Open-Meteo."
+    print(answer)
 
 
 if __name__ == "__main__":

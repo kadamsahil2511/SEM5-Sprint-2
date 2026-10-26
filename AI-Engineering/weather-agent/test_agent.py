@@ -8,7 +8,7 @@ from contextlib import redirect_stdout
 from unittest.mock import MagicMock, patch
 
 import requests
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableLambda
 
 
@@ -56,6 +56,16 @@ class WeatherToolTests(unittest.TestCase):
         self.assertIn("No location found", result)
         request.assert_called_once()
 
+    def test_ambiguous_country_code_retries_explicit_filter(self):
+        from agent import get_current_weather
+
+        responses = [Response({}), *weather_responses()]
+        with patch("agent.requests.get", side_effect=responses) as request:
+            result = get_current_weather.invoke({"city": "Mumbai, IN"})
+
+        self.assertIn("Mumbai, IN: 30°C", result)
+        self.assertEqual(request.call_args_list[1].kwargs["params"], {"name": "Mumbai", "count": 1, "countryCode": "IN"})
+
     def test_http_error_identifies_provider(self):
         from agent import get_current_weather
 
@@ -64,13 +74,19 @@ class WeatherToolTests(unittest.TestCase):
         self.assertIn("Open-Meteo", result)
         self.assertIn("HTTP 503", result)
 
-    def test_cli_runs_without_weather_key(self):
+    def test_cli_asks_model_to_answer_after_weather_lookup(self):
         from agent import main
 
+        prompts = []
+
+        def respond(prompt):
+            prompts.append(prompt.to_messages())
+            if len(prompts) == 1:
+                return AIMessage(content="", tool_calls=[{"name": "get_current_weather", "args": {"city": "Mumbai, IN"}, "id": "call_1"}])
+            return AIMessage(content="It's 30°C in Mumbai right now and feels like 33°C.")
+
         model = MagicMock()
-        model.bind_tools.return_value = RunnableLambda(
-            lambda _: AIMessage(content="", tool_calls=[{"name": "get_current_weather", "args": {"city": "Mumbai, IN"}, "id": "call_1"}])
-        )
+        model.bind_tools.return_value = RunnableLambda(respond)
         output = io.StringIO()
         with (
             patch.dict(os.environ, {}, clear=True),
@@ -80,7 +96,9 @@ class WeatherToolTests(unittest.TestCase):
             redirect_stdout(output),
         ):
             main()
-        self.assertIn("Current weather in Mumbai, IN: 30°C", output.getvalue())
+        self.assertEqual(output.getvalue().strip(), "It's 30°C in Mumbai right now and feels like 33°C. Source: Open-Meteo.")
+        self.assertEqual(len(prompts), 2)
+        self.assertTrue(any(isinstance(message, ToolMessage) and "30°C" in message.content for message in prompts[1]))
 
 
 if __name__ == "__main__":
