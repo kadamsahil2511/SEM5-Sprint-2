@@ -8,7 +8,7 @@ from contextlib import redirect_stdout
 from unittest.mock import MagicMock, patch
 
 import requests
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableLambda
 
 
@@ -86,35 +86,22 @@ class MultiToolAgentTests(unittest.TestCase):
         self.assertIn("https://docs.langchain.com/", rendered)
         self.assertNotIn("[LangChain docs]", rendered)
 
-    def test_chat_remembers_previous_turn_and_quits(self):
+    def test_no_argument_command_opens_tui(self):
         from agent import main
 
-        prompts = []
-
-        def respond(prompt):
-            messages = prompt.to_messages()
-            prompts.append(messages)
-            if len(prompts) == 1:
-                return AIMessage(content="My name is Atlas.")
-            return AIMessage(content="**Atlas** is my name.")
-
         model = MagicMock()
-        model.bind_tools.return_value = RunnableLambda(respond)
-        output = io.StringIO()
+        model.bind_tools.return_value = RunnableLambda(lambda _: AIMessage(content="unused"))
         with (
             patch.dict(os.environ, {}, clear=True),
             patch.object(sys, "argv", ["agent.py"]),
             patch("agent.ChatOllama", return_value=model),
-            patch("builtins.input", side_effect=["What is your name?", "Repeat your name.", "quit"]),
-            redirect_stdout(output),
+            patch("agent.ChatApp") as app,
+            patch("agent.ChatStore"),
+            patch("builtins.input", return_value="quit"),
+            redirect_stdout(io.StringIO()),
         ):
             main()
-
-        self.assertEqual(len(prompts), 2)
-        self.assertTrue(any(isinstance(message, HumanMessage) and message.content == "What is your name?" for message in prompts[1]))
-        self.assertTrue(any(isinstance(message, AIMessage) and message.content == "My name is Atlas." for message in prompts[1]))
-        self.assertIn("Atlas", output.getvalue())
-        self.assertNotIn("**Atlas**", output.getvalue())
+        app.return_value.run.assert_called_once_with()
 
     def test_weather_lookup_needs_no_api_key(self):
         from agent import get_current_weather

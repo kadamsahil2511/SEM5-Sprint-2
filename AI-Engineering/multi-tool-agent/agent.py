@@ -9,13 +9,14 @@ from ddgs import DDGS
 from ddgs.exceptions import DDGSException
 from dotenv import load_dotenv
 from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.panel import Panel
+
+from chat_store import ChatStore
+from tui import ChatApp, answer_question
 
 
 @tool
@@ -118,38 +119,12 @@ def main():
         max_iterations=4,
         return_intermediate_steps=True,
     )
-    console = Console(file=sys.stdout)
-    history = []
-
-    def reply(question):
-        with console.status("Thinking..."):
-            result = agent.invoke({"input": question, "chat_history": history})
-        answer = result["output"].strip()
-        if any(
-            action.tool == "get_current_weather" and observation.startswith("Current weather in ")
-            for action, observation in result["intermediate_steps"]
-        ) and "Open-Meteo" not in answer:
-            answer += " Source: Open-Meteo."
-        history.extend([HumanMessage(content=question), AIMessage(content=answer)])
-        console.print("[bold green]Assistant[/]")
-        console.print(Markdown(answer, hyperlinks=False))
-
     if len(sys.argv) > 1:
-        reply(" ".join(sys.argv[1:]))
+        answer = answer_question(agent, " ".join(sys.argv[1:]), [])
+        Console(file=sys.stdout).print(Markdown(answer, hyperlinks=False))
         return
-
-    console.print(Panel.fit("Ask about the weather or search the web.", title="Multi-tool agent"))
-    console.print("Type [bold]quit[/] or [bold]exit[/] to leave.\n")
-    while True:
-        try:
-            question = input("You: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            console.print()
-            break
-        if question.lower() in ("quit", "exit"):
-            break
-        if question:
-            reply(question)
+    store = ChatStore(Path(__file__).with_name(".chat_sessions.json"))
+    ChatApp(agent, store).run()
 
 
 if __name__ == "__main__":

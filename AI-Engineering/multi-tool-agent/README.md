@@ -1,13 +1,14 @@
-# Multi-tool agent
+# Multi-tool agent TUI
 
-A small LangChain CLI with two tools:
+A full-screen terminal chat built with Textual and Rich, using a LangChain agent
+with two tools:
 
 - `web_search` finds current web pages through keyless DuckDuckGo search and returns source links.
 - `get_current_weather` gets current conditions by city from [Open-Meteo](https://open-meteo.com/).
 
 The local Ollama model chooses a tool and turns its result into an answer. Rich
-renders Markdown responses in the terminal, including visible source URLs. The
-chat remembers earlier turns until you exit. No search or weather API key is needed.
+renders Markdown responses in the scrollable chat, including visible source
+URLs. Chats are saved locally between runs. No search or weather API key is needed.
 
 From this directory:
 
@@ -16,8 +17,17 @@ source ../../.venv/bin/activate
 python agent.py
 ```
 
-Ask at the `You:` prompt. Enter `quit` or `exit` to leave; Ctrl-C and Ctrl-D
-also work. For a single answer, pass the question on the command line:
+Enter a question in the input box. The app has these commands:
+
+- `/help` shows the commands.
+- `/new` starts a new chat.
+- `/sessions` lists saved chats and their IDs.
+- `/load ID` opens a saved chat.
+- `/quit` or Ctrl-Q exits.
+
+The last selected chat reopens on startup. Sessions are stored in the ignored
+`.chat_sessions.json` file in this directory. For a single answer without
+opening the TUI, pass the question on the command line:
 
 ```sh
 python agent.py "What is the weather in Mumbai, IN?"
